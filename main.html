@@ -294,49 +294,60 @@ function mostrarEstrelas(habilidade) {
             return result;
         }
 
-        function verificarTamanhosIguais(times,jogadoresPorTime ) {
-            if (times.length === 0) {
-                return true; // Um array vazio pode ser considerado como "tamanhos iguais".
-            }
+        function verificarTamanhosIguais(times, jogadoresPorTime) {
+    return times.every(time => time.length === jogadoresPorTime);
+}
 
+function verificarTamanhosIguais(times, jogadoresPorTime) {
+    return times.every(time => time.length === jogadoresPorTime);
+}
 
-            return times.every(time => time.length === jogadoresPorTime);
+function balancearTimes(times, jogadoresPorTime) {
+    let margemDiferenca = 5; // Margem aceitável para a diferença de habilidades
+    let contador = 0; // Limita o número de tentativas para evitar loops infinitos
+    const limiteTentativas = 30; // Número máximo de tentativas
 
-            }
+    while (contador < limiteTentativas) {
+        // Calcula as somas de habilidades de cada time
+        let somaHabilidades = times.map(time =>
+            time.reduce((total, jogador) => total + jogador.habilidade, 0)
+        );
 
-         // Função para balancear os times considerando as habilidades totais
-        function balancearTimes(times, jogadoresPorTime) {
-            let somaHabilidades = times.map(time => time.reduce((total, jogador) => total + jogador.habilidade, 0));
-            let totalHabilidades = somaHabilidades.reduce((total, soma) => total + soma, 0);
-            let media = totalHabilidades / times.length;
-            let contador = 1
-            // Enquanto a diferença entre os times for maior que uma margem, tentamos balancear
-            let balanceado = false;
-            let qtdJogadoresPorTimeOk = false;
-            while (!balanceado) {
-                let diferencaMaxima = Math.max(...somaHabilidades) - Math.min(...somaHabilidades);
-                if (diferencaMaxima <= 3 && qtdJogadoresPorTimeOk) {
-                    balanceado = true;
-                    break;
-                }
+        let diferencaMaxima = Math.max(...somaHabilidades) - Math.min(...somaHabilidades);
 
-                // Tentamos balancear os times movendo um jogador de maior habilidade
-                for (let i = 0; i < times.length; i++) {
-                    for (let j = 0; j < times[i].length; j++) {
-                        let jogador = times[i][j];
-                        let timeDestino = times.findIndex((time, idx) => idx !== i && time.reduce((total, j) => total + j.habilidade, 0) < somaHabilidades[i]);
-                        if (timeDestino !== -1) {
-                            times[timeDestino].push(jogador);
-                            times[i].splice(j, 1);
-                            somaHabilidades = times.map(time => time.reduce((total, jogador) => total + jogador.habilidade, 0));
-                            break;
-                        }
-                    }
-                }
-
-                qtdJogadoresPorTimeOk = verificarTamanhosIguais(times, jogadoresPorTime)
-            }
+        // Verifica se os times estão balanceados
+        if (
+            diferencaMaxima <= margemDiferenca &&
+            verificarTamanhosIguais(times, jogadoresPorTime)
+        ) {
+            console.log("Times balanceados com sucesso!");
+            return times;
         }
+
+        // Identifica o time mais forte e o time mais fraco
+        let timeMaisForte = somaHabilidades.indexOf(Math.max(...somaHabilidades));
+        let timeMaisFraco = somaHabilidades.indexOf(Math.min(...somaHabilidades));
+
+        // Encontra o jogador de maior habilidade no time mais forte
+        let jogadorMover = times[timeMaisForte].reduce((maior, jogador) =>
+            jogador.habilidade > maior.habilidade ? jogador : maior
+        );
+
+        // Move o jogador do time mais forte para o mais fraco
+        let indiceJogador = times[timeMaisForte].indexOf(jogadorMover);
+        if (indiceJogador !== -1) {
+            times[timeMaisFraco].push(jogadorMover);
+            times[timeMaisForte].splice(indiceJogador, 1);
+        }
+
+        contador++;
+    }
+
+    // console.warn("Não foi possível balancear os times dentro do limite de tentativas.");
+    return times;
+}
+
+
         // Função para exibir o resultado dos times
      function exibirResultado(times) {
     const resultado = document.getElementById("resultado-times");
