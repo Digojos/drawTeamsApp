@@ -1,17 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sorteio de Times por Habilidade</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        /* O restante do seu CSS permanece o mesmo */
-    </style>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sorteio de Times por Habilidade</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -47,22 +40,17 @@
             border-radius: 5px;
         }
         button.mover-btn {
-    background-color: transparent;
-    border: none;
-    color: #007BFF; /* Cor do ícone */
-    font-size: 20px; /* Tamanho do ícone */
-    cursor: pointer;
-    padding: 5px 10px;
-    transition: background-color 0.3s ease;
-}
-
-button.mover-btn:hover {
-    background-color: #f1f1f1;
-}
-
-button.mover-btn i {
-    margin-right: 5px; /* Espaço entre o ícone e o texto (caso precise) */
-}
+            background-color: transparent;
+            border: none;
+            color: #007BFF;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px 10px;
+            transition: background-color 0.3s ease;
+        }
+        button.mover-btn:hover {
+            background-color: #f1f1f1;
+        }
         .results {
             margin-top: 20px;
         }
@@ -86,31 +74,36 @@ button.mover-btn i {
                 padding: 15px;
             }
         }
-		
-		
-		button.remover-btn {
-    background-color: transparent;
-    border: none;
-    color: #dc3545; /* Cor vermelha para o ícone */
-    font-size: 20px; /* Tamanho do ícone */
-    cursor: pointer;
-    padding: 5px 10px;
-    transition: background-color 0.3s ease;
-}
-
-button.remover-btn:hover {
-    background-color: #f1f1f1;
-}
-
-button.remover-btn i {
-    margin-right: 5px; /* Espaço entre o ícone e o texto (caso precise) */
-}
-
-.estrela-dourada {
-    color: gold; /* Cor dourada */
-    font-size: 20px; /* Ajuste o tamanho conforme necessário */
-}
-
+        button.remover-btn {
+            background-color: transparent;
+            border: none;
+            color: #dc3545;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px 10px;
+            transition: background-color 0.3s ease;
+        }
+        button.remover-btn:hover {
+            background-color: #f1f1f1;
+        }
+        .estrela-dourada {
+            color: gold;
+            font-size: 20px;
+        }
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        .feedback.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .feedback.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
     </style>
 </head>
 <body>
@@ -124,18 +117,17 @@ button.remover-btn i {
         <div class="input-group">
             <label for="habilidade">Habilidade (1 a 5):</label>
             <select id="habilidade">
-        <option value="1">★</option>
-        <option value="2">★★</option>
-        <option value="3">★★★</option>
-        <option value="4">★★★★</option>
-        <option value="5">★★★★★</option>
-    </select>
+                <option value="1">★</option>
+                <option value="2">★★</option>
+                <option value="3">★★★</option>
+                <option value="4">★★★★</option>
+                <option value="5">★★★★★</option>
+            </select>
         </div>
         <div class="input-group">
             <label for="numTimes">Número de Times:</label>
             <input type="number" id="numTimes" min="2" placeholder="Digite o número de times">
         </div>
-
         <div class="input-group">
             <label for="jogadoresPorTime">Quantidade de Jogadores por Time:</label>
             <input type="number" id="jogadoresPorTime" min="1" placeholder="Digite a quantidade de jogadores por time">
@@ -143,236 +135,225 @@ button.remover-btn i {
         
         <button onclick="adicionarJogador()">Adicionar Jogador</button>
         
-        
         <div class="input-group">
             <label for="csvUpload">Importar CSV:</label>
             <input type="file" id="csvUpload" accept=".csv" onchange="importarCSV(event)">
         </div>
 
+        <div class="feedback" id="feedback"></div>
+
         <div class="results" id="jogadores-lista">
             <h2>Jogadores:</h2>
         </div>
-		<button onclick="sortearTimes()">Sortear Times</button>
+        <button onclick="sortearTimes()">Sortear Times</button>
+        <button onclick="exportarCSV()" id="exportarBtn" style="display: none;">Exportar Times para CSV</button>
         <div class="results" id="resultado-times"></div>
     </div>
 
     <script>
         let jogadores = [];
-        var times = [];
+        let times = [];
+
+        // Carregar jogadores do localStorage ao iniciar
+        carregarJogadores();
 
         // Função para adicionar jogador manualmente
         function adicionarJogador() {
-            const nome = document.getElementById("nome").value;
+            const nome = document.getElementById("nome").value.trim();
             const habilidade = parseInt(document.getElementById("habilidade").value);
 
-            if (!nome || !habilidade) {
-                alert("Por favor, insira o nome e habilidade do jogador.");
+            if (!nome || isNaN(habilidade)) {
+                mostrarFeedback("Por favor, insira o nome e habilidade do jogador.", "error");
+                return;
+            }
+
+            if (jogadores.some(jogador => jogador.nome === nome)) {
+                mostrarFeedback("Jogador com este nome já existe.", "error");
                 return;
             }
 
             jogadores.push({ nome, habilidade });
             document.getElementById("nome").value = "";
             atualizarListaJogadores();
+            salvarJogadores();
+            mostrarFeedback("Jogador adicionado com sucesso!", "success");
         }
 
         // Função para atualizar a lista de jogadores na tela
         function atualizarListaJogadores() {
-    const lista = document.getElementById("jogadores-lista");
-    lista.innerHTML = "<h2>Jogadores:</h2>";
-    jogadores.forEach((jogador, index) => {
-        lista.innerHTML += `
-            <div>
-                ${index + 1}. ${jogador.nome} - ${mostrarEstrelas(jogador.habilidade)}
-                <button class="remover-btn" onclick="removerJogador(${index})">
-                    <i class="fas fa-trash"></i> <!-- Ícone de lixeira -->
-                </button>
-            </div>
-        `;
-    });
-}
+            const lista = document.getElementById("jogadores-lista");
+            lista.innerHTML = "<h2>Jogadores:</h2>";
+            jogadores.forEach((jogador, index) => {
+                lista.innerHTML += `
+                    <div>
+                        ${index + 1}. ${jogador.nome} - ${mostrarEstrelas(jogador.habilidade)}
+                        <button class="remover-btn" onclick="removerJogador(${index})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+            });
+        }
 
-// Função para mostrar as estrelas como símbolo
-function mostrarEstrelas(habilidade) {
-    let estrelas = "";
-    for (let i = 0; i < habilidade; i++) {
-        estrelas += "<span class='estrela-dourada'>★</span>"; // Adiciona a classe para as estrelas
-    }
-    return estrelas;
-}
+        // Função para mostrar as estrelas como símbolo
+        function mostrarEstrelas(habilidade) {
+            let estrelas = "";
+            for (let i = 0; i < habilidade; i++) {
+                estrelas += "<span class='estrela-dourada'>★</span>";
+            }
+            return estrelas;
+        }
 
         // Função para remover jogador da lista
         function removerJogador(index) {
             jogadores.splice(index, 1);
             atualizarListaJogadores();
+            salvarJogadores();
+            mostrarFeedback("Jogador removido com sucesso!", "success");
         }
 
         // Função para importar CSV com nome e habilidade
         function importarCSV(event) {
             const file = event.target.files[0];
-            const reader = new FileReader();
+            if (!file) return;
 
+            const reader = new FileReader();
             reader.onload = function(e) {
                 const content = e.target.result;
                 const lines = content.split('\n');
-                jogadores = [];
-                lines.forEach(line => {
-                    const [nome, habilidade, mens] = line.split(',');
-                    if (nome && habilidade && mens) {
-                        jogadores.push({ nome: nome.trim(), habilidade: parseInt(habilidade.trim()), mens: parseInt(mens.trim()) });
+                let erroFormatacao = false;
+
+                lines.forEach((line, index) => {
+                    const [nome, habilidade] = line.split(',');
+                    if (!nome || !habilidade || isNaN(habilidade)) {
+                        erroFormatacao = true;
+                        return;
                     }
+                    if (jogadores.some(jogador => jogador.nome === nome.trim())) {
+                        erroFormatacao = true;
+                        return;
+                    }
+                    jogadores.push({ nome: nome.trim(), habilidade: parseInt(habilidade.trim()) });
                 });
-                atualizarListaJogadores();
+
+                if (erroFormatacao) {
+                    mostrarFeedback("Erro ao importar CSV. Verifique o formato do arquivo.", "error");
+                } else {
+                    atualizarListaJogadores();
+                    salvarJogadores();
+                    mostrarFeedback("CSV importado com sucesso!", "success");
+                }
             };
 
-            if (file) {
-                reader.readAsText(file);
-            }
+            reader.readAsText(file);
         }
 
         // Função para sortear os times e garantir que eles sejam equilibrados
         function sortearTimes() {
-            // Se já existirem times, vamos "limpar" os times anteriores
-            times = [];
             const numTimes = parseInt(document.getElementById("numTimes").value);
             const jogadoresPorTime = parseInt(document.getElementById("jogadoresPorTime").value);
-            var qtdVagas = numTimes * jogadoresPorTime;
-            // Validação dos campos
+
             if (!numTimes || numTimes < 2) {
-                alert("Por favor, insira um número válido de times (mínimo 2).");
+                mostrarFeedback("Por favor, insira um número válido de times (mínimo 2).", "error");
                 return;
             }
             if (!jogadoresPorTime || jogadoresPorTime < 1) {
-                alert("Por favor, insira uma quantidade válida de jogadores por time (mínimo 1).");
+                mostrarFeedback("Por favor, insira uma quantidade válida de jogadores por time (mínimo 1).", "error");
                 return;
             }
             if (jogadores.length < numTimes * jogadoresPorTime) {
-                alert("Jogadores insuficientes para preencher os times.");
+                mostrarFeedback("Jogadores insuficientes para preencher os times.", "error");
                 return;
             }
 
             // Ordena os jogadores por habilidade de forma decrescente
-            jogadores.sort((a, b) => b.mens - a.mens);
-            
+            jogadores.sort((a, b) => b.habilidade - a.habilidade);
 
-            var jogadoresSelecionados = getRandom(jogadores, qtdVagas)
-            
-            // Inicializa os times com a quantidade de jogadores especificada
+            // Inicializa os times
             let timesSorteados = Array.from({ length: numTimes }, () => []);
 
-            
-
-            // Distribui os jogadores alternadamente para garantir a quantidade por time
+            // Distribui os jogadores alternadamente
             let jogadorIndex = 0;
-            while (jogadorIndex < jogadoresSelecionados.length) {
+            while (jogadorIndex < jogadores.length) {
                 for (let i = 0; i < numTimes; i++) {
-                    if (timesSorteados[i].length < jogadoresPorTime) {
-                        timesSorteados[i].push(jogadoresSelecionados[jogadorIndex]);
+                    if (timesSorteados[i].length < jogadoresPorTime && jogadorIndex < jogadores.length) {
+                        timesSorteados[i].push(jogadores[jogadorIndex]);
                         jogadorIndex++;
                     }
                 }
             }
 
-            // Agora vamos tentar balancear os times considerando as habilidades
+            // Balanceia os times
             balancearTimes(timesSorteados, jogadoresPorTime);
 
-            // Exibe o resultado final
+            // Exibe o resultado
             exibirResultado(timesSorteados);
             times = timesSorteados;
+            document.getElementById("exportarBtn").style.display = "block";
         }
 
-        function getRandom(arr, n) {
-            var result = new Array(n),
-                len = arr.length,
-                taken = new Array(len);
-            if (n > len)
-                throw new RangeError("getRandom: more elements taken than available");
-            while (n--) {
-                var x = Math.floor(Math.random() * len);
-                result[n] = arr[x in taken ? taken[x] : x];
-                taken[x] = --len in taken ? taken[len] : len;
+        // Função para balancear os times
+        function balancearTimes(times, jogadoresPorTime) {
+            let margemDiferenca = 5;
+            let contador = 0;
+            const limiteTentativas = 30;
+
+            while (contador < limiteTentativas) {
+                let somaHabilidades = times.map(time =>
+                    time.reduce((total, jogador) => total + jogador.habilidade, 0)
+                );
+                let diferencaMaxima = Math.max(...somaHabilidades) - Math.min(...somaHabilidades);
+
+                if (diferencaMaxima <= margemDiferenca && verificarTamanhosIguais(times, jogadoresPorTime)) {
+                    return times;
+                }
+
+                let timeMaisForte = somaHabilidades.indexOf(Math.max(...somaHabilidades));
+                let timeMaisFraco = somaHabilidades.indexOf(Math.min(...somaHabilidades));
+
+                let jogadorMover = times[timeMaisForte].reduce((maior, jogador) =>
+                    jogador.habilidade > maior.habilidade ? jogador : maior
+                );
+
+                let indiceJogador = times[timeMaisForte].indexOf(jogadorMover);
+                if (indiceJogador !== -1) {
+                    times[timeMaisFraco].push(jogadorMover);
+                    times[timeMaisForte].splice(indiceJogador, 1);
+                }
+
+                contador++;
             }
-            return result;
-        }
-
-        function verificarTamanhosIguais(times, jogadoresPorTime) {
-    return times.every(time => time.length === jogadoresPorTime);
-}
-
-function verificarTamanhosIguais(times, jogadoresPorTime) {
-    return times.every(time => time.length === jogadoresPorTime);
-}
-
-function balancearTimes(times, jogadoresPorTime) {
-    let margemDiferenca = 5; // Margem aceitável para a diferença de habilidades
-    let contador = 0; // Limita o número de tentativas para evitar loops infinitos
-    const limiteTentativas = 30; // Número máximo de tentativas
-
-    while (contador < limiteTentativas) {
-        // Calcula as somas de habilidades de cada time
-        let somaHabilidades = times.map(time =>
-            time.reduce((total, jogador) => total + jogador.habilidade, 0)
-        );
-
-        let diferencaMaxima = Math.max(...somaHabilidades) - Math.min(...somaHabilidades);
-
-        // Verifica se os times estão balanceados
-        if (
-            diferencaMaxima <= margemDiferenca &&
-            verificarTamanhosIguais(times, jogadoresPorTime)
-        ) {
-            console.log("Times balanceados com sucesso!");
             return times;
         }
 
-        // Identifica o time mais forte e o time mais fraco
-        let timeMaisForte = somaHabilidades.indexOf(Math.max(...somaHabilidades));
-        let timeMaisFraco = somaHabilidades.indexOf(Math.min(...somaHabilidades));
-
-        // Encontra o jogador de maior habilidade no time mais forte
-        let jogadorMover = times[timeMaisForte].reduce((maior, jogador) =>
-            jogador.habilidade > maior.habilidade ? jogador : maior
-        );
-
-        // Move o jogador do time mais forte para o mais fraco
-        let indiceJogador = times[timeMaisForte].indexOf(jogadorMover);
-        if (indiceJogador !== -1) {
-            times[timeMaisFraco].push(jogadorMover);
-            times[timeMaisForte].splice(indiceJogador, 1);
+        // Função para verificar se todos os times têm o mesmo tamanho
+        function verificarTamanhosIguais(times, jogadoresPorTime) {
+            return times.every(time => time.length === jogadoresPorTime);
         }
 
-        contador++;
-    }
-
-    // console.warn("Não foi possível balancear os times dentro do limite de tentativas.");
-    return times;
-}
-
-
         // Função para exibir o resultado dos times
-     function exibirResultado(times) {
-    const resultado = document.getElementById("resultado-times");
-    let html = "<h2>Resultado dos Times:</h2>";
+        function exibirResultado(times) {
+            const resultado = document.getElementById("resultado-times");
+            let html = "<h2>Resultado dos Times:</h2>";
 
-    times.forEach((time, index) => {
-        html += `<div><strong>Time ${index + 1}:</strong></div>`;
-        time.forEach((jogador, jogadorIndex) => {
-            html += `
-                <div>
-                    ${jogador.nome} - ${mostrarEstrelas(jogador.habilidade)}
-                    <button class="mover-btn" onclick="moverJogador(${index}, ${jogadorIndex})">
-                        <i class="fas fa-sync-alt"></i> <!-- Ícone de reciclagem -->
-                    </button>
-                </div>
-            `;
-        });
-        const habilidadeTotal = time.reduce((total, jogador) => total + jogador.habilidade, 0);
-        html += `<div><strong>Total de Habilidade:</strong> ${habilidadeTotal}</div><br>`;
-    });
+            times.forEach((time, index) => {
+                html += `<div><strong>Time ${index + 1}:</strong></div>`;
+                time.forEach((jogador, jogadorIndex) => {
+                    html += `
+                        <div>
+                            ${jogador.nome} - ${mostrarEstrelas(jogador.habilidade)}
+                            <button class="mover-btn" onclick="moverJogador(${index}, ${jogadorIndex})">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    `;
+                });
+                const habilidadeTotal = time.reduce((total, jogador) => total + jogador.habilidade, 0);
+                html += `<div><strong>Total de Habilidade:</strong> ${habilidadeTotal}</div><br>`;
+            });
 
-    resultado.innerHTML = html;
-}
-
-
+            resultado.innerHTML = html;
+        }
 
         // Função para mover o jogador entre os times
         function moverJogador(timeIndex, jogadorIndex) {
@@ -383,15 +364,56 @@ function balancearTimes(times, jogadoresPorTime) {
             const timeDestinoIndex = parseInt(timeDestino) - 1;
 
             if (isNaN(timeDestinoIndex) || timeDestinoIndex < 0 || timeDestinoIndex >= times.length || timeDestinoIndex === timeIndex) {
-                alert("Seleção inválida de time.");
+                mostrarFeedback("Seleção inválida de time.", "error");
                 return;
             }
 
             const jogador = times[timeIndex].splice(jogadorIndex, 1)[0];
             times[timeDestinoIndex].push(jogador);
 
-            // Atualiza o resultado dos times
             exibirResultado(times);
+        }
+
+        // Função para exportar os times para CSV
+        function exportarCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            times.forEach((time, index) => {
+                csvContent += `Time ${index + 1}\n`;
+                time.forEach(jogador => {
+                    csvContent += `${jogador.nome},${jogador.habilidade}\n`;
+                });
+                csvContent += "\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "times.csv");
+            document.body.appendChild(link);
+            link.click();
+        }
+
+        // Função para mostrar feedback visual
+        function mostrarFeedback(mensagem, tipo) {
+            const feedback = document.getElementById("feedback");
+            feedback.textContent = mensagem;
+            feedback.className = `feedback ${tipo}`;
+            feedback.style.display = "block";
+            setTimeout(() => feedback.style.display = "none", 3000);
+        }
+
+        // Função para salvar jogadores no localStorage
+        function salvarJogadores() {
+            localStorage.setItem('jogadores', JSON.stringify(jogadores));
+        }
+
+        // Função para carregar jogadores do localStorage
+        function carregarJogadores() {
+            const dados = localStorage.getItem('jogadores');
+            if (dados) {
+                jogadores = JSON.parse(dados);
+                atualizarListaJogadores();
+            }
         }
     </script>
 </body>
