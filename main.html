@@ -294,27 +294,48 @@
 
         // Função para balancear os times
         function balancearTimes(times, jogadoresPorTime) {
-            let margemDiferenca = 5;
-            let contador = 0;
-            const limiteTentativas = 30;
+            let margemDiferenca = 5; // Margem inicial aceitável para a diferença de habilidades
+            let contador = 0; // Contador de tentativas
+            const limiteTentativas = 100; // Limite máximo de tentativas
+
+            // Verifica se o balanceamento é viável antes de começar
+            if (!verificarViabilidade(times, margemDiferenca)) {
+                console.warn("Balanceamento inviável: diferença de habilidades muito grande.");
+                return times; // Retorna os times sem balanceamento
+            }
 
             while (contador < limiteTentativas) {
+                // Calcula as somas de habilidades de cada time
                 let somaHabilidades = times.map(time =>
                     time.reduce((total, jogador) => total + jogador.habilidade, 0)
                 );
+
                 let diferencaMaxima = Math.max(...somaHabilidades) - Math.min(...somaHabilidades);
 
-                if (diferencaMaxima <= margemDiferenca && verificarTamanhosIguais(times, jogadoresPorTime)) {
+                // Verifica se os times estão balanceados
+                if (
+                    diferencaMaxima <= margemDiferenca &&
+                    verificarTamanhosIguais(times, jogadoresPorTime)
+                ) {
+                    console.log("Times balanceados com sucesso!");
                     return times;
                 }
 
+                // Aumenta a margem de diferença se o contador passar da metade do limite
+                if (contador > limiteTentativas / 2) {
+                    margemDiferenca += 1; // Aumenta a margem para facilitar o balanceamento
+                }
+
+                // Identifica o time mais forte e o time mais fraco
                 let timeMaisForte = somaHabilidades.indexOf(Math.max(...somaHabilidades));
                 let timeMaisFraco = somaHabilidades.indexOf(Math.min(...somaHabilidades));
 
+                // Encontra o jogador de maior habilidade no time mais forte
                 let jogadorMover = times[timeMaisForte].reduce((maior, jogador) =>
                     jogador.habilidade > maior.habilidade ? jogador : maior
                 );
 
+                // Move o jogador do time mais forte para o mais fraco
                 let indiceJogador = times[timeMaisForte].indexOf(jogadorMover);
                 if (indiceJogador !== -1) {
                     times[timeMaisFraco].push(jogadorMover);
@@ -323,7 +344,22 @@
 
                 contador++;
             }
-            return times;
+
+            console.warn("Não foi possível balancear os times dentro do limite de tentativas.");
+            return times; // Retorna os times mesmo que não estejam perfeitamente balanceados
+        }
+
+        // Função para verificar se o balanceamento é viável
+        function verificarViabilidade(times, margemDiferenca) {
+            const totalHabilidades = times.flat().reduce((total, jogador) => total + jogador.habilidade, 0);
+            const numTimes = times.length;
+            const mediaPorTime = totalHabilidades / numTimes;
+
+            // Verifica se a diferença entre a soma máxima e mínima possível está dentro da margem
+            const somaMaxima = mediaPorTime + margemDiferenca;
+            const somaMinima = mediaPorTime - margemDiferenca;
+
+            return somaMaxima - somaMinima <= margemDiferenca * 2;
         }
 
         // Função para verificar se todos os times têm o mesmo tamanho
